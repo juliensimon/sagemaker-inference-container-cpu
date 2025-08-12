@@ -16,6 +16,7 @@ from app.model_manager import (
     LLAMACPP_DIR,
     MODELS_DIR,
     _convert_hf_to_gguf,
+    _detect_model_type_from_s3_uri,
     _find_convert_script,
     _find_quantize_binary,
     _looks_like_hf_repo,
@@ -503,21 +504,167 @@ class TestPrepareModelAndGetPath:
     @patch("pathlib.Path.exists")
     @patch("pathlib.Path.rename")
     @patch("app.model_manager.download_s3")
+    @patch("app.model_manager._detect_model_type_from_s3_uri")
     def test_prepare_model_s3_source_missing_model_filename(
-        self, mock_download_s3, mock_rename, mock_exists, mock_mkdir, temp_dir
+        self,
+        mock_detect_type,
+        mock_download_s3,
+        mock_rename,
+        mock_exists,
+        mock_mkdir,
+        temp_dir,
     ):
-        """Test error when MODEL_FILENAME is missing for S3 source."""
+        """Test error when MODEL_FILENAME is missing for GGUF S3 source."""
         with patch.dict("os.environ", {"HF_MODEL_URI": "s3://bucket/model/"}):
+            # Mock detection to return gguf so it requires MODEL_FILENAME
+            mock_detect_type.return_value = "gguf"
             mock_exists.return_value = False
 
             with patch("app.model_manager.MODELS_DIR", temp_dir):
                 with pytest.raises(
-                    RuntimeError, match="MODEL_FILENAME is required for S3 downloads"
+                    RuntimeError,
+                    match="MODEL_FILENAME is required for GGUF downloads from S3",
                 ):
                     prepare_model_and_get_path()
 
                 # Download should not be called since we error before that
                 mock_download_s3.assert_not_called()
+
+    @pytest.mark.unit
+    @patch("pathlib.Path.mkdir")
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.rename")
+    @patch("app.model_manager.download_s3")
+    @patch("app.model_manager._detect_model_type_from_s3_uri")
+    @patch("app.model_manager._looks_like_hf_repo")
+    @patch("app.model_manager._convert_hf_to_gguf")
+    def test_prepare_model_s3_safetensors_without_model_filename(
+        self,
+        mock_convert,
+        mock_looks_like,
+        mock_detect_type,
+        mock_download_s3,
+        mock_rename,
+        mock_exists,
+        mock_mkdir,
+        temp_dir,
+    ):
+        """Test safetensors model from S3 without MODEL_FILENAME."""
+        with patch.dict(
+            "os.environ", {"HF_MODEL_URI": "s3://bucket/safetensors-model/"}
+        ):
+            # Mock detection to return safetensors
+            mock_detect_type.return_value = "safetensors"
+
+            # Mock file existence - model doesn't exist initially, then we have HF repo
+            call_count = 0
+
+            def mock_exists_side_effect(*args, **kwargs):
+                nonlocal call_count
+                call_count += 1
+                # First call: model_root.exists() returns False (no current model)
+                return False
+
+            mock_exists.side_effect = mock_exists_side_effect
+
+            # Mock HF repo detection
+            mock_looks_like.return_value = True
+
+            # Mock conversion
+            converted_file = temp_dir / "converted.gguf"
+            mock_convert.return_value = converted_file
+
+            with patch("app.model_manager.MODELS_DIR", temp_dir):
+                result = prepare_model_and_get_path()
+
+                # Should succeed without MODEL_FILENAME
+                mock_download_s3.assert_called_once()
+                mock_detect_type.assert_called_once_with(
+                    "s3://bucket/safetensors-model/"
+                )
+                mock_convert.assert_called_once()
+                assert result == str(converted_file)
+
+    @pytest.mark.unit
+    @patch("pathlib.Path.mkdir")
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.rename")
+    @patch("app.model_manager.download_s3")
+    @patch("app.model_manager._detect_model_type_from_s3_uri")
+    def test_prepare_model_s3_gguf_without_model_filename_fails(
+        self,
+        mock_detect_type,
+        mock_download_s3,
+        mock_rename,
+        mock_exists,
+        mock_mkdir,
+        temp_dir,
+    ):
+        """Test GGUF model from S3 without MODEL_FILENAME fails."""
+        with patch.dict("os.environ", {"HF_MODEL_URI": "s3://bucket/gguf-model/"}):
+            # Mock detection to return gguf
+            mock_detect_type.return_value = "gguf"
+
+            mock_exists.return_value = False
+
+            with patch("app.model_manager.MODELS_DIR", temp_dir):
+                with pytest.raises(
+                    RuntimeError,
+                    match="MODEL_FILENAME is required for GGUF downloads from S3",
+                ):
+                    prepare_model_and_get_path()
+
+                # Download should not be called since we error before that
+                mock_download_s3.assert_not_called()
+
+    @pytest.mark.unit
+    @patch("pathlib.Path.mkdir")
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.rename")
+    @patch("app.model_manager.download_s3")
+    @patch("app.model_manager._detect_model_type_from_s3_uri")
+    @patch("app.model_manager._looks_like_hf_repo")
+    @patch("app.model_manager._convert_hf_to_gguf")
+    def test_prepare_model_s3_unknown_type_without_model_filename_warning(
+        self,
+        mock_convert,
+        mock_looks_like,
+        mock_detect_type,
+        mock_download_s3,
+        mock_rename,
+        mock_exists,
+        mock_mkdir,
+        temp_dir,
+        capsys,
+    ):
+        """Test unknown model type from S3 without MODEL_FILENAME shows warning."""
+        with patch.dict("os.environ", {"HF_MODEL_URI": "s3://bucket/unknown-model/"}):
+            # Mock detection to return unknown
+            mock_detect_type.return_value = "unknown"
+
+            # Mock file existence - model doesn't exist initially, then we have HF repo
+            mock_exists.return_value = False
+
+            # Mock HF repo detection
+            mock_looks_like.return_value = True
+
+            # Mock conversion
+            converted_file = temp_dir / "converted.gguf"
+            mock_convert.return_value = converted_file
+
+            with patch("app.model_manager.MODELS_DIR", temp_dir):
+                result = prepare_model_and_get_path()
+
+                # Should succeed with warning
+                captured = capsys.readouterr()
+                assert (
+                    "WARNING: Could not detect model type from S3 URI" in captured.out
+                )
+                assert "Assuming safetensors format" in captured.out
+
+                mock_download_s3.assert_called_once()
+                mock_convert.assert_called_once()
+                assert result == str(converted_file)
 
     @pytest.mark.unit
     @patch("pathlib.Path.mkdir")
@@ -609,6 +756,127 @@ class TestPrepareModelAndGetPath:
                     prepare_model_and_get_path()
         finally:
             Path.exists = original_exists
+
+
+class TestDetectModelTypeFromS3Uri:
+    """Test the _detect_model_type_from_s3_uri function."""
+
+    @pytest.mark.unit
+    @patch("boto3.client")
+    def test_detect_gguf_files(self, mock_boto3_client):
+        """Test detection of GGUF files in S3."""
+        s3_uri = "s3://bucket/gguf-models/"
+
+        # Mock S3 client
+        mock_s3 = Mock()
+        mock_paginator = Mock()
+        mock_page = {
+            "Contents": [
+                {"Key": "gguf-models/model.gguf"},
+                {"Key": "gguf-models/other.txt"},
+            ]
+        }
+        mock_paginator.paginate.return_value = [mock_page]
+        mock_s3.get_paginator.return_value = mock_paginator
+        mock_boto3_client.return_value = mock_s3
+
+        result = _detect_model_type_from_s3_uri(s3_uri)
+        assert result == "gguf"
+
+    @pytest.mark.unit
+    @patch("boto3.client")
+    def test_detect_safetensors_files(self, mock_boto3_client):
+        """Test detection of safetensors files in S3."""
+        s3_uri = "s3://bucket/safetensors-models/"
+
+        # Mock S3 client
+        mock_s3 = Mock()
+        mock_paginator = Mock()
+        mock_page = {
+            "Contents": [
+                {"Key": "safetensors-models/config.json"},
+                {"Key": "safetensors-models/model.safetensors"},
+            ]
+        }
+        mock_paginator.paginate.return_value = [mock_page]
+        mock_s3.get_paginator.return_value = mock_paginator
+        mock_boto3_client.return_value = mock_s3
+
+        result = _detect_model_type_from_s3_uri(s3_uri)
+        assert result == "safetensors"
+
+    @pytest.mark.unit
+    @patch("boto3.client")
+    def test_detect_unknown_files(self, mock_boto3_client):
+        """Test detection when no recognizable files are found."""
+        s3_uri = "s3://bucket/unknown-models/"
+
+        # Mock S3 client
+        mock_s3 = Mock()
+        mock_paginator = Mock()
+        mock_page = {
+            "Contents": [
+                {"Key": "unknown-models/README.md"},
+                {"Key": "unknown-models/other.txt"},
+            ]
+        }
+        mock_paginator.paginate.return_value = [mock_page]
+        mock_s3.get_paginator.return_value = mock_paginator
+        mock_boto3_client.return_value = mock_s3
+
+        result = _detect_model_type_from_s3_uri(s3_uri)
+        assert result == "unknown"
+
+    @pytest.mark.unit
+    @patch("boto3.client")
+    def test_detect_prefers_gguf_over_safetensors(self, mock_boto3_client):
+        """Test that GGUF is detected first when both types are present."""
+        s3_uri = "s3://bucket/mixed-models/"
+
+        # Mock S3 client
+        mock_s3 = Mock()
+        mock_paginator = Mock()
+        mock_page = {
+            "Contents": [
+                {"Key": "mixed-models/model.gguf"},
+                {"Key": "mixed-models/model.safetensors"},
+            ]
+        }
+        mock_paginator.paginate.return_value = [mock_page]
+        mock_s3.get_paginator.return_value = mock_paginator
+        mock_boto3_client.return_value = mock_s3
+
+        result = _detect_model_type_from_s3_uri(s3_uri)
+        assert result == "gguf"
+
+    @pytest.mark.unit
+    @patch("boto3.client")
+    def test_detect_handles_s3_error(self, mock_boto3_client):
+        """Test handling of S3 errors during detection."""
+        s3_uri = "s3://bucket/models/"
+
+        # Mock S3 client to raise exception
+        mock_boto3_client.side_effect = Exception("S3 error")
+
+        result = _detect_model_type_from_s3_uri(s3_uri)
+        assert result == "unknown"
+
+    @pytest.mark.unit
+    @patch("boto3.client")
+    def test_detect_empty_s3_location(self, mock_boto3_client):
+        """Test detection when S3 location is empty."""
+        s3_uri = "s3://bucket/empty/"
+
+        # Mock S3 client
+        mock_s3 = Mock()
+        mock_paginator = Mock()
+        mock_page = {"Contents": []}
+        mock_paginator.paginate.return_value = [mock_page]
+        mock_s3.get_paginator.return_value = mock_paginator
+        mock_boto3_client.return_value = mock_s3
+
+        result = _detect_model_type_from_s3_uri(s3_uri)
+        assert result == "unknown"
 
 
 class TestEnvironmentVariables:

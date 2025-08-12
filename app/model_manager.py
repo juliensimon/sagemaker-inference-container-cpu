@@ -133,13 +133,46 @@ def _looks_like_hf_repo(dir_path: Path) -> bool:
     return (dir_path / "config.json").exists() or any(dir_path.glob("*.safetensors"))
 
 
+def _detect_model_type_from_s3_uri(s3_uri: str) -> str:
+    """
+    Detect if an S3 URI points to GGUF or safetensors files.
+
+    Args:
+        s3_uri: S3 URI to analyze
+
+    Returns:
+        'gguf' if URI points to GGUF files, 'safetensors' if safetensors, 'unknown' otherwise
+    """
+    import boto3
+
+    from app.sources_s3 import _parse_s3_uri
+
+    try:
+        s3 = boto3.client("s3")
+        bucket, prefix = _parse_s3_uri(s3_uri)
+
+        # Check a few files to determine type
+        paginator = s3.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+            for obj in page.get("Contents", []):
+                key = obj["Key"]
+                if key.endswith(".gguf"):
+                    return "gguf"
+                elif key.endswith(".safetensors"):
+                    return "safetensors"
+        return "unknown"
+    except Exception:
+        return "unknown"
+
+
 def prepare_model_and_get_path() -> str:
     """
     Prepare the model for inference and return its path.
 
-    This function handles two scenarios:
+    This function handles different scenarios:
     1. An existing GGUF file (via MODEL_FILENAME)
     2. A safetensors model in HuggingFace format (via HF_MODEL_ID or HF_MODEL_URI)
+    3. S3 downloads that can be either GGUF (requires MODEL_FILENAME) or safetensors (optional)
 
     Returns:
         Path to the prepared model file
@@ -167,11 +200,19 @@ def prepare_model_and_get_path() -> str:
             print(f"Downloading model from HuggingFace: {hf_model_id}")
             download_hf(repo_id=hf_model_id, dest_dir=tmp_root, filename=gguf_file)
         elif hf_model_uri:
-            # For S3 downloads, MODEL_FILENAME is required for GGUF files
-            if not gguf_file:
-                error_msg = "MODEL_FILENAME is required for S3 downloads. Please specify the GGUF file to download."
+            # For S3 downloads, determine if we need MODEL_FILENAME based on content type
+            model_type = _detect_model_type_from_s3_uri(hf_model_uri)
+
+            if model_type == "gguf" and not gguf_file:
+                error_msg = "MODEL_FILENAME is required for GGUF downloads from S3. Please specify the GGUF file to download."
                 print(f"ERROR: {error_msg}")
                 raise RuntimeError(error_msg)
+            elif model_type == "unknown" and not gguf_file:
+                # For backward compatibility, warn but allow if we can't detect
+                print(
+                    "WARNING: Could not detect model type from S3 URI. Assuming safetensors format."
+                )
+
             print(f"Downloading model from S3: {hf_model_uri}")
             download_s3(s3_uri=hf_model_uri, dest_dir=tmp_root)
         else:
@@ -197,7 +238,7 @@ def prepare_model_and_get_path() -> str:
             return str(q_path)
         return str(f16_path)
 
-    # This should not be reached for S3 downloads since MODEL_FILENAME is required
+    # This should not be reached for S3 GGUF downloads since MODEL_FILENAME is required
     raise RuntimeError(
         "No usable model found. For GGUF files, provide MODEL_FILENAME. For HuggingFace safetensors models, ensure the downloaded files contain config.json or .safetensors files."
     )
