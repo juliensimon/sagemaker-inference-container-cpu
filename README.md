@@ -49,11 +49,12 @@ SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 80
 
 ```bash
 # Clone repository
-git clone https://github.com/juliensimon/sagemaker-inference-graviton
-cd sagemaker-inference-graviton
+git clone https://github.com/juliensimon/sagemaker-inference-container-graviton
+
+cd sagemaker-inference-container-graviton
 
 # Build for ARM64 (Graviton)
-docker build --platform linux/arm64 -t sagemaker-inference-graviton .
+docker build --platform linux/arm64 -t sagemaker-inference-container-graviton .
 ```
 
 ### 2. Push to ECR
@@ -62,7 +63,7 @@ docker build --platform linux/arm64 -t sagemaker-inference-graviton .
 # Set variables
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 AWS_REGION=$(aws configure get region)
-ECR_REPOSITORY="sagemaker-inference-graviton"
+ECR_REPOSITORY="sagemaker-inference-container-graviton"
 
 # Create ECR repository (if it doesn't exist)
 aws ecr create-repository \
@@ -85,7 +86,7 @@ docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:la
 
 ## Deploy to SageMaker
 
-Here's a quick look at how you can deploy models. A full notebook is available in `examples/`.
+Here's a quick overview of how to deploy models. A full notebook is available in `examples/`.
 
 ```python
 
