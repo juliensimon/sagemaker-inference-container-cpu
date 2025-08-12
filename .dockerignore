@@ -1,7 +1,50 @@
-env/
-**/__pycache__/**
-**/*.pyc
-.git/
+# Git and version control
+.git
 .gitignore
-*.ipynb
+.gitattributes
+
+# Development and testing
+.pytest_cache
+.coverage
+.coveragerc
+*.pyc
+__pycache__
+.mypy_cache
+.tox
+.venv
+venv/
+env/
+.env
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation and README (keep only essential README.md)
+*.md
+!README.md
+
+# Testing
+tests/
+pytest.ini
+
+# Build artifacts and logs
 *.log
+*.tmp
+build/
+dist/
+*.egg-info/
+
+# Development tools
+.pre-commit-config.yaml
+pre-commit
+.pre-commit-hooks.yaml
+
+# Other unnecessary files
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
