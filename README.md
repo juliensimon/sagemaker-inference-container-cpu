@@ -77,7 +77,7 @@ aws ecr get-login-password --region $AWS_REGION | \
     docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 # Tag image
-docker tag sagemaker-inference-graviton:latest \
+docker tag sagemaker-inference-container-graviton:latest \
     $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
 # Push image
@@ -166,4 +166,4 @@ output = json.loads(response["Body"].read().decode("utf8"))
 
 ## License
 
-MIT License
+Modified MIT License
