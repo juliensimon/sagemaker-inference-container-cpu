@@ -1,12 +1,21 @@
 # An Amazon SageMaker Container for Hugging Face model inference on AWS Graviton instances
 
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Amazon SageMaker](https://img.shields.io/badge/Amazon%20SageMaker-FF9900?style=flat&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/sagemaker/)
+[![ARM64](https://img.shields.io/badge/ARM64-Graviton-orange?style=flat&logo=arm&logoColor=white)](https://aws.amazon.com/ec2/graviton/)
+[![Python](https://img.shields.io/badge/python-3.12+-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-yellow?style=flat)](https://huggingface.co/)
+[![llama.cpp](https://img.shields.io/badge/llama.cpp-enabled-brightgreen?style=flat)](https://github.com/ggerganov/llama.cpp)
+
 ## What It Does
 
 - Native integration with the SageMaker SDK
-- Deployment from the Hugging Face hub or an Amazon S3 bucket
-- Support for existing GGUF models
-- Support for safetensors models, with automatic GGUF conversion and quantization
-- Support for the OpenAI API endpoints (`/v1/chat/completions`, `/v1/completions`)
+- Model deployment from the Hugging Face hub or an Amazon S3 bucket
+- Deployment of existing GGUF models
+- Deployment of safetensors models, with automatic GGUF conversion and quantization
+- Support for  OpenAI API (`/v1/chat/completions`, `/v1/completions`)
 - Support for streaming and non-streaming text generation
 - Support for all `llama-server` flags
 
@@ -90,7 +99,8 @@ model_environment = {
 
 # Option 4: Deploy a GGUF model from S3
 model_environment = {
-    "HF_MODEL_URI": "s3://your-bucket/your-model.gguf",
+    "HF_MODEL_URI": "s3://your-bucket/",
+    "MODEL_FILENAME": "your-model.gguf"
 }
 
 # Create deployable model
@@ -132,14 +142,14 @@ output = json.loads(response["Body"].read().decode("utf8"))
 
 ### Environment Variables
 
-| Variable | Description | Mandatory |
+| Variable | Description | Use for |
 |----------|-------------|---------|
-| `HF_MODEL_ID` | Hugging Face model repository  | Only for hub deployments |
-| `HF_MODEL_URI` | S3 URI for model files (safetensors or GGUF) | Only for S3 deployments|
-| `MODEL_FILENAME` | Specific GGUF file to use | Only for GGUF hub deployments |
-| `HF_TOKEN` | Hugging Face token for private and gated models | Only for private and gated hub models |
-| `QUANTIZATION` | Quantization level (e.g., Q4_K_M) | No, F16 will be used by default |
-| `LLAMA_CPP_ARGS` | Additional llama.cpp arguments | No |
+| `HF_MODEL_ID` | Hugging Face model repository  | Hub deployments |
+| `HF_MODEL_URI` | S3 URI for model files (safetensors or GGUF) | S3 deployments|
+| `MODEL_FILENAME` | Specific GGUF file to use | GGUF model deployment |
+| `HF_TOKEN` | Hugging Face token for private and gated models | Private and gated hub models |
+| `QUANTIZATION` | Quantization level (e.g., Q4_K_M) | default is F16 |
+| `LLAMA_CPP_ARGS` | Additional llama.cpp arguments | default is empty |
 
 ## License
 
