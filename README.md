@@ -1,4 +1,4 @@
-# An Amazon SageMaker Container for Hugging Face model inference on AWS Graviton instances
+# An Amazon SageMaker Container for Hugging Face Inference on AWS Graviton
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
@@ -9,9 +9,20 @@
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-yellow?style=flat)](https://huggingface.co/)
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-enabled-brightgreen?style=flat)](https://github.com/ggerganov/llama.cpp)
 
+## Why?
+
+Because small language models and modern CPUs are a great match for cost-efficient AI inference. More context in these blog posts: ["The case for small language model inference on Arm CPUs"](https://www.arcee.ai/blog/the-case-for-small-language-model-inference-on-arm-cpus) and ["Is running language models on CPU really viable?"](https://www.arcee.ai/blog/is-running-language-models-on-cpu-really-viable).
+
+Because I've been trying for a while to collaborate with AWS and Arm on this project, and I got tired of waiting 😴
+
+So there. Enjoy!
+
+Caveat: I've only tested sub-10B models so far. Timeouts could hit on larger models. Bug reports, ideas, and pull requests are welcome.
+
 ## What It Does
 
-- Native integration with the SageMaker SDK
+- Based on a clean source build of llama.cpp
+- Native integration with the SageMaker SDK and the Graviton3/Graviton4 instances
 - Model deployment from the Hugging Face hub or an Amazon S3 bucket
 - Deployment of existing GGUF models
 - Deployment of safetensors models, with automatic GGUF conversion and quantization
@@ -19,13 +30,14 @@
 - Support for streaming and non-streaming text generation
 - Support for all `llama-server` flags
 
+
 ## Architecture
 
 ```
 SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 8081)
 ```
 
-## Build and Push to ECR
+## Build and Push to Amazon ECR
 
 ### Prerequisites
 
@@ -44,7 +56,7 @@ cd sagemaker-inference-graviton
 docker build --platform linux/arm64 -t sagemaker-inference-graviton .
 ```
 
-### 2. Push to Amazon ECR
+### 2. Push to ECR
 
 ```bash
 # Set variables
