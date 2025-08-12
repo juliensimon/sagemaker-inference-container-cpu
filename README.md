@@ -37,11 +37,11 @@ SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 80
 
 ```bash
 # Clone repository
-git clone https://github.com/juliensimon/sagemaker-inference-llamacpp-graviton
-cd sagemaker-inference-llamacpp-graviton
+git clone https://github.com/juliensimon/sagemaker-inference-graviton
+cd sagemaker-inference-graviton
 
 # Build for ARM64 (Graviton)
-docker build --platform linux/arm64 -t sagemaker-llamacpp-graviton .
+docker build --platform linux/arm64 -t sagemaker-inference-graviton .
 ```
 
 ### 2. Push to Amazon ECR
@@ -50,7 +50,7 @@ docker build --platform linux/arm64 -t sagemaker-llamacpp-graviton .
 # Set variables
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 AWS_REGION=$(aws configure get region)
-ECR_REPOSITORY="sagemaker-llamacpp-graviton"
+ECR_REPOSITORY="sagemaker-inference-graviton"
 
 # Create ECR repository (if it doesn't exist)
 aws ecr create-repository \
@@ -64,7 +64,7 @@ aws ecr get-login-password --region $AWS_REGION | \
     docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 # Tag image
-docker tag sagemaker-llamacpp-graviton:latest \
+docker tag sagemaker-inference-graviton:latest \
     $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
 
 # Push image
@@ -142,7 +142,7 @@ output = json.loads(response["Body"].read().decode("utf8"))
 
 ### Environment Variables
 
-| Variable | Description | Use for |
+| Variable | Description | Usage |
 |----------|-------------|---------|
 | `HF_MODEL_ID` | Hugging Face model repository  | Hub deployments |
 | `HF_MODEL_URI` | S3 URI for model files (safetensors or GGUF) | S3 deployments|
