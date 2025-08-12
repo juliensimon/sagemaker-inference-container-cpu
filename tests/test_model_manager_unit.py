@@ -466,22 +466,58 @@ class TestPrepareModelAndGetPath:
     @patch("pathlib.Path.exists")
     @patch("pathlib.Path.rename")
     @patch("app.model_manager.download_s3")
-    def test_prepare_model_s3_source(
+    def test_prepare_model_s3_source_with_model_filename(
         self, mock_download_s3, mock_rename, mock_exists, mock_mkdir, temp_dir
     ):
-        """Test model preparation with S3 source."""
+        """Test model preparation with S3 source and MODEL_FILENAME."""
+        with patch.dict(
+            "os.environ",
+            {"HF_MODEL_URI": "s3://bucket/model/", "MODEL_FILENAME": "test.gguf"},
+        ):
+            # Mock file existence - model doesn't exist initially, then GGUF file exists after download
+            call_count = 0
+
+            def mock_exists_side_effect(*args, **kwargs):
+                nonlocal call_count
+                call_count += 1
+                # First call: model_root.exists() returns False (no current model)
+                if call_count == 1:
+                    return False
+                # Second call: gguf_path.exists() returns True (GGUF file exists)
+                elif call_count == 2:
+                    return True
+                # Any additional calls return True
+                return True
+
+            mock_exists.side_effect = mock_exists_side_effect
+
+            with patch("app.model_manager.MODELS_DIR", temp_dir):
+                result = prepare_model_and_get_path()
+                expected_path = str(temp_dir / "current" / "test.gguf")
+                assert result == expected_path
+
+                mock_download_s3.assert_called_once()
+
+    @pytest.mark.unit
+    @patch("pathlib.Path.mkdir")
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.rename")
+    @patch("app.model_manager.download_s3")
+    def test_prepare_model_s3_source_missing_model_filename(
+        self, mock_download_s3, mock_rename, mock_exists, mock_mkdir, temp_dir
+    ):
+        """Test error when MODEL_FILENAME is missing for S3 source."""
         with patch.dict("os.environ", {"HF_MODEL_URI": "s3://bucket/model/"}):
             mock_exists.return_value = False
 
             with patch("app.model_manager.MODELS_DIR", temp_dir):
-                # Should not raise an error for S3 source
-                try:
+                with pytest.raises(
+                    RuntimeError, match="MODEL_FILENAME is required for S3 downloads"
+                ):
                     prepare_model_and_get_path()
-                except RuntimeError as e:
-                    # Expected to fail after download since we're not mocking the full chain
-                    assert "No usable model found" in str(e)
 
-                mock_download_s3.assert_called_once()
+                # Download should not be called since we error before that
+                mock_download_s3.assert_not_called()
 
     @pytest.mark.unit
     @patch("pathlib.Path.mkdir")

@@ -167,6 +167,11 @@ def prepare_model_and_get_path() -> str:
             print(f"Downloading model from HuggingFace: {hf_model_id}")
             download_hf(repo_id=hf_model_id, dest_dir=tmp_root, filename=gguf_file)
         elif hf_model_uri:
+            # For S3 downloads, MODEL_FILENAME is required for GGUF files
+            if not gguf_file:
+                error_msg = "MODEL_FILENAME is required for S3 downloads. Please specify the GGUF file to download."
+                print(f"ERROR: {error_msg}")
+                raise RuntimeError(error_msg)
             print(f"Downloading model from S3: {hf_model_uri}")
             download_s3(s3_uri=hf_model_uri, dest_dir=tmp_root)
         else:
@@ -192,6 +197,7 @@ def prepare_model_and_get_path() -> str:
             return str(q_path)
         return str(f16_path)
 
+    # This should not be reached for S3 downloads since MODEL_FILENAME is required
     raise RuntimeError(
-        "No usable model found. Provide MODEL_FILENAME for existing GGUF file or HF_MODEL_ID/HF_MODEL_URI for HuggingFace model."
+        "No usable model found. For GGUF files, provide MODEL_FILENAME. For HuggingFace safetensors models, ensure the downloaded files contain config.json or .safetensors files."
     )
