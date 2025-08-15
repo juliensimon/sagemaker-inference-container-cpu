@@ -1,0 +1,86 @@
+services:
+  # First run: Download, convert, and quantize AFM-4.5B
+  afm-first-run:
+    build: .
+    platform: linux/arm64
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./local_models:/opt/models
+    environment:
+      - HF_MODEL_ID=arcee-ai/AFM-4.5B
+      - HF_TOKEN=${HF_TOKEN}
+      - QUANTIZATION=Q4_K_M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s  # Allow 5 minutes for model processing
+    profiles:
+      - first-run
+
+  # Subsequent runs: Use existing quantized model (fast startup)
+  afm-fast:
+    build: .
+    platform: linux/arm64
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./local_models:/opt/models
+    environment:
+      - MODEL_FILENAME=model-f16.Q4_K_M.gguf
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # Fast startup with existing model
+    profiles:
+      - fast
+
+  # Development/testing with different quantization
+  afm-q8:
+    build: .
+    platform: linux/arm64
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./local_models:/opt/models
+    environment:
+      - HF_MODEL_ID=arcee-ai/AFM-4.5B
+      - HF_TOKEN=${HF_TOKEN}
+      - QUANTIZATION=Q8_0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+    profiles:
+      - q8
+
+  # No quantization (F16 only)
+  afm-f16:
+    build: .
+    platform: linux/arm64
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+      - ./local_models:/opt/models
+    environment:
+      - HF_MODEL_ID=arcee-ai/AFM-4.5B
+      - HF_TOKEN=${HF_TOKEN}
+      # No QUANTIZATION env var = F16 only
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+    profiles:
+      - f16

@@ -276,3 +276,4 @@ model.tar.gz
 # Temporary model downloads
 tmp/
 temp/
+local_models/

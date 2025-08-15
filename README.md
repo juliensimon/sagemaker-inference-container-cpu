@@ -9,6 +9,8 @@
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-yellow?style=flat)](https://huggingface.co/)
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-enabled-brightgreen?style=flat)](https://github.com/ggerganov/llama.cpp)
 
+> **💡 Running Locally?** This container works great outside of SageMaker too! Check out [README-run-locally.md](README-run-locally.md) for Docker commands or [README-docker-compose.md](README-docker-compose.md) for Docker Compose setup.
+
 ## Why?
 
 Because small language models and modern CPUs are a great match for cost-efficient AI inference. More context in these blog posts: ["The case for small language model inference on Arm CPUs"](https://www.arcee.ai/blog/the-case-for-small-language-model-inference-on-arm-cpus) and ["Is running language models on CPU really viable?"](https://www.arcee.ai/blog/is-running-language-models-on-cpu-really-viable).
