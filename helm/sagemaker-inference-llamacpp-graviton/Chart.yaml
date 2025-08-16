@@ -1,0 +1,18 @@
+apiVersion: v2
+name: sagemaker-inference-llamacpp-graviton
+description: A Helm chart for deploying the SageMaker inference container for Hugging Face models on AWS Graviton
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - sagemaker
+  - inference
+  - huggingface
+  - llamacpp
+  - graviton
+home: https://github.com/juliensimon/sagemaker-inference-container-graviton
+sources:
+  - https://github.com/juliensimon/sagemaker-inference-container-graviton
+maintainers:
+  - name: juliensimon
+    email: julien@arcee.ai

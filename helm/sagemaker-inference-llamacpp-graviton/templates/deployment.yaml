@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sagemaker-inference-llamacpp-graviton.fullname" . }}
+  labels:
+    {{- include "sagemaker-inference-llamacpp-graviton.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sagemaker-inference-llamacpp-graviton.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sagemaker-inference-llamacpp-graviton.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sagemaker-inference-llamacpp-graviton.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            {{- if .Values.model.hfModelId }}
+            - name: HF_MODEL_ID
+              value: {{ .Values.model.hfModelId | quote }}
+            {{- end }}
+            {{- if .Values.model.hfModelUri }}
+            - name: HF_MODEL_URI
+              value: {{ .Values.model.hfModelUri | quote }}
+            {{- end }}
+            {{- if .Values.model.modelFilename }}
+            - name: MODEL_FILENAME
+              value: {{ .Values.model.modelFilename | quote }}
+            {{- end }}
+            {{- if .Values.model.hfToken }}
+            - name: HF_TOKEN
+              value: {{ .Values.model.hfToken | quote }}
+            {{- end }}
+            {{- if .Values.model.quantization }}
+            - name: QUANTIZATION
+              value: {{ .Values.model.quantization | quote }}
+            {{- end }}
+            {{- if .Values.model.llamaCppArgs }}
+            - name: LLAMA_CPP_ARGS
+              value: {{ .Values.model.llamaCppArgs | quote }}
+            {{- end }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: hf-cache
+              mountPath: {{ .Values.persistence.hfCachePath }}
+            - name: models
+              mountPath: {{ .Values.persistence.modelsPath }}
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.healthCheck.enabled }}
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.failureThreshold }}
+            successThreshold: {{ .Values.healthCheck.successThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthCheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthCheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthCheck.failureThreshold }}
+            successThreshold: {{ .Values.healthCheck.successThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: hf-cache
+          {{- if .Values.persistence.storageClass }}
+          persistentVolumeClaim:
+            claimName: {{ include "sagemaker-inference-llamacpp-graviton.fullname" . }}-hf-cache
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "sagemaker-inference-llamacpp-graviton.fullname" . }}-models
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

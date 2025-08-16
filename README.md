@@ -9,7 +9,7 @@
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-yellow?style=flat)](https://huggingface.co/)
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-enabled-brightgreen?style=flat)](https://github.com/ggerganov/llama.cpp)
 
-> **💡 Running Locally?** This container works great outside of SageMaker too! Check out [README-run-locally.md](README-run-locally.md) for Docker commands or [README-docker-compose.md](README-docker-compose.md) for Docker Compose setup.
+> **💡 Running Locally?** This container works great outside of SageMaker too! Check out [README-run-locally.md](README-run-locally.md) for Docker commands, [README-docker-compose.md](README-docker-compose.md) for Docker Compose setup, or [helm/README.md](helm/README.md) for Kubernetes deployment with Helm.
 
 ## Why?
 

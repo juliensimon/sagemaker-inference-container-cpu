@@ -1,0 +1,92 @@
+# Default values for sagemaker-inference-llamacpp-graviton
+replicaCount: 1
+
+image:
+  repository: sagemaker-inference-llamacpp-graviton
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  limits:
+    cpu: 4000m
+    memory: 8Gi
+  requests:
+    cpu: 2000m
+    memory: 4Gi
+
+nodeSelector:
+  kubernetes.io/arch: arm64
+
+tolerations: []
+
+affinity: {}
+
+# Model configuration
+model:
+  # Hugging Face model ID (for hub deployments)
+  # Note: "arcee-ai/AFM-4.5B" is a gated model - requires HF_TOKEN
+  hfModelId: "arcee-ai/AFM-4.5B"
+  # S3 URI for model files (for S3 deployments)
+  hfModelUri: ""
+  # Specific GGUF filename (for GGUF deployments)
+  modelFilename: ""
+  # Hugging Face token for private/gated models
+  hfToken: ""
+  # Quantization level (e.g., Q4_K_M, Q8_0, F16)
+  quantization: "Q4_K_M"
+  # Additional llama.cpp arguments
+  llamaCppArgs: ""
+
+# Persistence configuration
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  # Path for Hugging Face cache
+  hfCachePath: "/root/.cache/huggingface"
+  # Path for local models
+  modelsPath: "/opt/models"
+
+# Health check configuration
+healthCheck:
+  enabled: true
+  initialDelaySeconds: 300
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+# Environment variables
+env: []
+  # - name: ADDITIONAL_ENV_VAR
+  #   value: "value"
+
+# Volume mounts
+volumeMounts: []
+  # - name: additional-volume
+  #   mountPath: /additional/path
+
+# Volumes
+volumes: []
+  # - name: additional-volume
+  #   emptyDir: {}
