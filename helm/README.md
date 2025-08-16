@@ -18,9 +18,6 @@ First, build the Docker image for your target architecture:
 ```bash
 # For ARM64 (Graviton) - Production
 docker build --platform linux/arm64 -t sagemaker-inference-llamacpp-graviton:latest .
-
-# For x86_64 - Local testing
-docker build -t sagemaker-inference-llamacpp-graviton:latest .
 ```
 
 ### 2. Install the Chart
