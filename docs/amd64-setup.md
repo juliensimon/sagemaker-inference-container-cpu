@@ -27,7 +27,7 @@ For public models that don't require authentication:
 
 ```bash
 docker run -d -p 8080:8080 \
-  -e HF_MODEL_ID="microsoft/DialoGPT-medium" \
+  -e HF_MODEL_ID="arcee-ai/arcee-lite" \
   -e QUANTIZATION="Q4_K_M" \
   --name llm-test \
   afm-inference:amd64
@@ -195,7 +195,7 @@ docker run -d -p 8080:8080 \
 docker run -d -p 8080:8080 \
   -v ~/.cache/huggingface:/root/.cache/huggingface \
   -v $(pwd)/local_models:/opt/models \
-  -e HF_MODEL_ID="microsoft/DialoGPT-medium" \
+  -e HF_MODEL_ID="arcee-ai/arcee-lite" \
   -e QUANTIZATION="Q4_K_M" \
   -e LLAMA_CPP_ARGS="--ctx-size 4096 --threads 8" \
   --name llm-test \

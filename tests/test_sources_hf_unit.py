@@ -248,7 +248,7 @@ class TestDownloadHf:
     @patch("app.sources_hf.snapshot_download")
     def test_download_hf_with_complex_repo_id(self, mock_snapshot_download, temp_dir):
         """Test download with complex repository ID."""
-        repo_id = "microsoft/DialoGPT-small"
+        repo_id = "arcee-ai/arcee-lite"
         dest_dir = temp_dir / "download"
 
         # Mock successful download
