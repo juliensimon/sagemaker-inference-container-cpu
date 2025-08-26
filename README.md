@@ -15,6 +15,8 @@
 > - For local Docker and Docker Compose usage, see the [Intel doc](docs/amd64-setup.md) and the [Arm doc](docs/arm64-setup.md).
 > - For Kubernetes/Helm, see [helm/README.md](helm/README.md)
 
+**That's it!** The container automatically downloads, converts, and optimizes the model for your CPU architecture.
+
 ## Why?
 
 Because small language models and modern CPUs are a great match for cost-efficient AI inference. More context in these blog posts: ["The case for small language model inference on Arm CPUs"](https://www.arcee.ai/blog/the-case-for-small-language-model-inference-on-arm-cpus) and ["Is running language models on CPU really viable?"](https://www.arcee.ai/blog/is-running-language-models-on-cpu-really-viable).
@@ -43,6 +45,51 @@ Caveat: I've only tested sub-10B models so far. Timeouts could hit on larger mod
 SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 8081)
 ```
 
+## Quickstart
+
+### Prerequisites
+
+- Docker with AMD64 or AMR64 support
+- Log in to the Docker Hub
+- Log in to the Hugging Face Hub
+- ECR repository created
+### 1. Pull the Container
+
+```bash
+# For Intel/AMD64 systems
+docker pull juliensimon/sagemaker-inference-llamacpp-cpu:amd64
+
+# For ARM64/Graviton systems
+docker pull juliensimon/sagemaker-inference-llamacpp-cpu:arm64
+```
+
+### 2. Run with a Public Model
+
+```bash
+mkdir local_models
+# Start the container with a public Hugging Face model
+docker run -p 8080:8080 \
+  -e HF_MODEL_ID="arcee-ai/arcee-lite" \
+  -e QUANTIZATION="Q4_K_M" \
+  -v $(pwd)/local_models:/opt/models \
+  --name llm-inference \
+  juliensimon/sagemaker-inference-llamacpp-cpu:arm64
+```
+
+### 3. Test the API
+
+```bash
+# Chat completion
+curl -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Hello! How are you today?"}
+    ],
+    "max_tokens": 100
+  }'
+```
+
 ## Amazon SageMaker instructions
 
 ### Prerequisites
@@ -51,8 +98,16 @@ SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 80
 - AWS CLI configured with appropriate permissions
 - ECR repository created
 
-### 1. Build the Container
+### 1. Build the Container (Optional)
 
+**Pre-built images are available on Docker Hub:**
+```bash
+# Pull pre-built images
+docker pull juliensimon/sagemaker-inference-llamacpp-cpu:amd64
+docker pull juliensimon/sagemaker-inference-llamacpp-cpu:arm64
+```
+
+**Or build from source:**
 ```bash
 # Clone repository
 git clone https://github.com/juliensimon/sagemaker-inference-container-graviton

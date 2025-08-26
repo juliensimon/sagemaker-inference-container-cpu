@@ -197,7 +197,6 @@ def prepare_model_and_get_path() -> str:
         hf_model_uri = os.environ.get("HF_MODEL_URI")
 
         if hf_model_id:
-            print(f"Downloading model from HuggingFace: {hf_model_id}")
             download_hf(repo_id=hf_model_id, dest_dir=tmp_root, filename=gguf_file)
         elif hf_model_uri:
             # For S3 downloads, determine if we need MODEL_FILENAME based on content type
@@ -213,7 +212,6 @@ def prepare_model_and_get_path() -> str:
                     "WARNING: Could not detect model type from S3 URI. Assuming safetensors format."
                 )
 
-            print(f"Downloading model from S3: {hf_model_uri}")
             download_s3(s3_uri=hf_model_uri, dest_dir=tmp_root)
         else:
             raise RuntimeError("Either HF_MODEL_ID or HF_MODEL_URI must be provided")

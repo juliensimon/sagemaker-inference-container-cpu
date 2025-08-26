@@ -58,7 +58,7 @@ def download_s3(s3_uri: str, dest_dir: Path) -> None:
     s3 = boto3.client("s3")
     bucket, prefix = _parse_s3_uri(s3_uri)
 
-    print(f"Downloading from S3: bucket={bucket}, prefix={prefix}")
+    print(f"Downloading model from S3: {s3_uri}")
 
     # Check if this is a single file or directory
     paginator = s3.get_paginator("list_objects_v2")
