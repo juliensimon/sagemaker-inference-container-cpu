@@ -10,9 +10,9 @@
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-yellow?style=flat)](https://huggingface.co/)
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-enabled-brightgreen?style=flat)](https://github.com/ggerganov/llama.cpp)
 
-> **💡 Not Just for SageMaker!**  
-> This container runs anywhere Docker is available—on your laptop, on-prem servers, or any cloud (not just AWS or SageMaker).  
-> - For local Docker and Docker Compose usage, see the [Intel doc](docs/amd64-setup.md) and the [Arm doc](docs/arm64-setup.md).  
+> **💡 Not Just for SageMaker!**
+> This container runs anywhere Docker is available—on your laptop, on-prem servers, or any cloud (not just AWS or SageMaker).
+> - For local Docker and Docker Compose usage, see the [Intel doc](docs/amd64-setup.md) and the [Arm doc](docs/arm64-setup.md).
 > - For Kubernetes/Helm, see [helm/README.md](helm/README.md)
 
 ## Why?
@@ -30,8 +30,8 @@ Caveat: I've only tested sub-10B models so far. Timeouts could hit on larger mod
 - Based on a clean source build of llama.cpp
 - Native integration with the SageMaker SDK and both Graviton3/Graviton4 (ARM64) and Intel Xeon (AMD64) instances
 - Model deployment from the Hugging Face hub or an Amazon S3 bucket
+- Single-step deployment and optimization of safetensors models, with automatic GGUF conversion and quantization
 - Deployment of existing GGUF models
-- Deployment of safetensors models, with automatic GGUF conversion and quantization
 - Support for  OpenAI API (`/v1/chat/completions`, `/v1/completions`)
 - Support for streaming and non-streaming text generation
 - Support for all `llama-server` flags
