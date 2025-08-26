@@ -1,9 +1,10 @@
-# Running the Container Locally with Docker
+# ARM64 Setup Guide
 
-This guide shows you how to test the SageMaker inference container locally using Docker, without needing Amazon SageMaker or the SageMaker SDK.
+This guide covers setting up and running the AFM-4.5B model on ARM64 architecture (Apple Silicon, AWS Graviton, etc.) using Docker, without needing Amazon SageMaker or the SageMaker SDK.
 
 ## Prerequisites
 
+- ARM64 system (Apple Silicon Mac, AWS Graviton, etc.)
 - Docker with ARM64/multi-platform support
 - HuggingFace account and token (for gated models)
 - Sufficient disk space (models can be several GB)
@@ -13,7 +14,11 @@ This guide shows you how to test the SageMaker inference container locally using
 ### 1. Build the Container
 
 ```bash
-docker build --platform linux/arm64 -t sagemaker-inference-llamacpp-graviton .
+# Auto-detect your ARM64 system
+source scripts/detect-architecture.sh
+
+# Build specifically for ARM64
+./scripts/build-arm64.sh
 ```
 
 ### 2. Run with a Public Model
@@ -25,7 +30,7 @@ docker run -d -p 8080:8080 \
   -e HF_MODEL_ID="microsoft/DialoGPT-medium" \
   -e QUANTIZATION="Q4_K_M" \
   --name llm-test \
-  sagemaker-inference-llamacpp-graviton
+  afm-inference:arm64
 ```
 
 ### 3. Run with a Private or Gated Model
@@ -45,7 +50,7 @@ docker run -d -p 8080:8080 \
   -e HF_TOKEN="your_hf_token_here" \
   -e QUANTIZATION="Q4_K_M" \
   --name llm-test \
-  sagemaker-inference-llamacpp-graviton
+  afm-inference:arm64
 ```
 
 #### Subsequent Runs (Use Existing Quantized Model)
@@ -56,13 +61,34 @@ docker run -d -p 8080:8080 \
   -v $(pwd)/local_models:/opt/models \
   -e MODEL_FILENAME="model-f16.Q4_K_M.gguf" \
   --name llm-test \
-  sagemaker-inference-llamacpp-graviton
+  afm-inference:arm64
+```
+
+### 4. Run with Docker Compose (Alternative)
+
+```bash
+# First run (download, convert, quantize)
+docker-compose -f docker/arm64/docker-compose.yml --profile first-run up --build afm-first-run
+
+# Subsequent runs (fast startup)
+docker-compose -f docker/arm64/docker-compose.yml --profile fast up afm-fast
 ```
 
 **Important:**
 - Replace `your_hf_token_here` with your actual HuggingFace token from [HuggingFace tokens page](https://huggingface.co/settings/tokens) or `~/.cache/huggingface/token`
 - **First run**: Takes 5+ minutes (download, convert, quantize)
 - **Subsequent runs**: Takes ~30 seconds (loads existing model directly)
+
+## ARM64-Specific Optimizations
+
+### Compilation Optimizations
+
+The ARM64 build includes the following optimizations:
+
+- **ARM NEON**: Vector instructions for ARM64
+- **OpenBLAS**: Optimized BLAS library for ARM64
+- **Native compilation**: `-march=native -mtune=native`
+- **Memory alignment**: Optimized for ARM64 cache lines
 
 ## Environment Variables
 
@@ -91,29 +117,6 @@ docker run -d -p 8080:8080 \
 - **Purpose:** Persists converted and quantized models locally
 - **Benefit:** Subsequent runs skip conversion/quantization (much faster!)
 - **Contains:** Original model files, GGUF conversions, and quantized models
-
-## What Happens During Startup
-
-### First Run (with HF_MODEL_ID + QUANTIZATION)
-1. **Download:** Model is downloaded from HuggingFace Hub
-2. **Convert:** Safetensors/PyTorch model → GGUF F16 format
-3. **Quantize:** F16 model → Quantized model (Q4_K_M reduces size by ~70%)
-4. **Start:** llama.cpp server starts with the quantized model
-5. **Ready:** FastAPI adapter starts and proxies requests
-
-### Subsequent Runs (with MODEL_FILENAME)
-1. **Skip Download/Convert/Quantize:** Uses existing quantized model directly
-2. **Start:** llama.cpp server starts with the existing quantized model
-3. **Ready:** FastAPI adapter starts and proxies requests
-
-**Performance Comparison:**
-- **First run**: 5+ minutes (download + convert + quantize)
-- **Subsequent runs**: ~30 seconds (direct model loading)
-
-**Example file sizes for AFM-4.5B:**
-- Original safetensors: 8.6GB
-- GGUF F16: 8.6GB
-- GGUF Q4_K_M: 2.7GB (68% reduction!)
 
 ## Testing the APIs
 
@@ -166,9 +169,9 @@ curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [
-      {"role": "user", "content": "Count from 1 to 5"}
+      {"role": "user", "content": "Count from 1 to 10"}
     ],
-    "max_tokens": 30,
+    "max_tokens": 50,
     "stream": true
   }'
 ```
@@ -183,7 +186,7 @@ docker run -d -p 8080:8080 \
   -e HF_MODEL_ID="TheBloke/Llama-2-7B-Chat-GGUF" \
   -e MODEL_FILENAME="llama-2-7b-chat.q4_k_m.gguf" \
   --name llm-test \
-  sagemaker-inference-llamacpp-graviton
+  afm-inference:arm64
 ```
 
 ### Custom llama.cpp Arguments
@@ -195,7 +198,7 @@ docker run -d -p 8080:8080 \
   -e QUANTIZATION="Q4_K_M" \
   -e LLAMA_CPP_ARGS="--ctx-size 4096 --threads 8" \
   --name llm-test \
-  sagemaker-inference-llamacpp-graviton
+  afm-inference:arm64
 ```
 
 ## Finding Your MODEL_FILENAME
@@ -228,3 +231,33 @@ local_models/
 ```
 
 The quantized `.gguf` file is what the llama.cpp server actually uses for inference.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Build failures**: Ensure you have ARM64-compatible Docker
+2. **Performance issues**: Check thread count and memory allocation
+3. **Model loading errors**: Verify sufficient disk space and memory
+
+### Debug Commands
+
+```bash
+# Check architecture
+uname -m
+
+# Check Docker platform
+docker version
+
+# Check container logs
+docker-compose -f docker/arm64/docker-compose.yml logs afm-fast
+
+# Check resource usage
+docker stats
+```
+
+## Next Steps
+
+- [AMD64 Setup Guide](amd64-setup.md)
+- [Original Docker Compose Guide](../README-docker-compose.md)
+- [Performance Optimization](performance-optimization.md)

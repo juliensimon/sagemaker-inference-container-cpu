@@ -1,5 +1,5 @@
 # Multi-stage build to separate build dependencies from runtime
-FROM arm64v8/ubuntu:24.04 AS builder
+FROM amd64/ubuntu:24.04 AS builder
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -10,13 +10,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake pkg-config \
     python3 python3-pip python3-venv \
     libcurl4-openssl-dev \
+    libopenblas-dev \
+    intel-mkl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up build directories
 ENV LLAMACPP_DIR=/opt/llama.cpp \
     VENV_DIR=/opt/venv
 
-# Clone and build llama.cpp
+# Clone and build llama.cpp with Intel optimizations
 RUN git clone --depth 1 https://github.com/ggml-org/llama.cpp.git ${LLAMACPP_DIR}
 WORKDIR ${LLAMACPP_DIR}
 RUN cmake -S . -B build \
@@ -25,6 +27,7 @@ RUN cmake -S . -B build \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_BENCHMARKS=OFF \
     -DBUILD_SHARED_LIBS=OFF \
+    -DCMAKE_CXX_FLAGS="-march=native -mtune=native" \
     && cmake --build build --target llama-server llama-quantize -j"$(nproc)"
 
 # Create Python venv and install requirements
@@ -38,7 +41,7 @@ RUN pip install --no-cache-dir --upgrade pip==24.0 && \
     pip install --no-cache-dir -r ${LLAMACPP_DIR}/requirements.txt
 
 # Final runtime image
-FROM arm64v8/ubuntu:24.04
+FROM amd64/ubuntu:24.04
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -48,6 +51,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates curl \
     python3 \
     libcurl4-openssl-dev \
+    libopenblas0 \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean

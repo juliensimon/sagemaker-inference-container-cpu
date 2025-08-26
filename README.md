@@ -1,15 +1,19 @@
-# An Amazon SageMaker Container for Hugging Face Inference on AWS Graviton
+# An Amazon SageMaker Container for Hugging Face Inference on Graviton and Intel CPUs
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Amazon SageMaker](https://img.shields.io/badge/Amazon%20SageMaker-FF9900?style=flat&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/sagemaker/)
 [![ARM64](https://img.shields.io/badge/ARM64-Graviton-orange?style=flat&logo=arm&logoColor=white)](https://aws.amazon.com/ec2/graviton/)
+[![AMD64](https://img.shields.io/badge/AMD64-x86_64-blue?style=flat&logo=amd&logoColor=white)](https://www.amd.com/)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-yellow?style=flat)](https://huggingface.co/)
 [![llama.cpp](https://img.shields.io/badge/llama.cpp-enabled-brightgreen?style=flat)](https://github.com/ggerganov/llama.cpp)
 
-> **💡 Running Locally?** This container works great outside of SageMaker too! Check out [README-run-locally.md](README-run-locally.md) for Docker commands, [README-docker-compose.md](README-docker-compose.md) for Docker Compose setup, or [helm/README.md](helm/README.md) for Kubernetes deployment with Helm.
+> **💡 Not Just for SageMaker!**  
+> This container runs anywhere Docker is available—on your laptop, on-prem servers, or any cloud (not just AWS or SageMaker).  
+> - For local Docker and Docker Compose usage, see the [Intel doc](docs/amd64-setup.md) and the [Arm doc](docs/arm64-setup.md).  
+> - For Kubernetes/Helm, see [helm/README.md](helm/README.md)
 
 ## Why?
 
@@ -24,7 +28,7 @@ Caveat: I've only tested sub-10B models so far. Timeouts could hit on larger mod
 ## What It Does
 
 - Based on a clean source build of llama.cpp
-- Native integration with the SageMaker SDK and the Graviton3/Graviton4 instances
+- Native integration with the SageMaker SDK and both Graviton3/Graviton4 (ARM64) and Intel Xeon (AMD64) instances
 - Model deployment from the Hugging Face hub or an Amazon S3 bucket
 - Deployment of existing GGUF models
 - Deployment of safetensors models, with automatic GGUF conversion and quantization
@@ -39,11 +43,11 @@ Caveat: I've only tested sub-10B models so far. Timeouts could hit on larger mod
 SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 8081)
 ```
 
-## Build and Push to Amazon ECR
+## Amazon SageMaker instructions
 
 ### Prerequisites
 
-- Docker with ARM64/multi-platform support (building on a Mac works great)
+- Docker with AMD64 or AMR64 support (building on a Mac for Graviton works great)
 - AWS CLI configured with appropriate permissions
 - ECR repository created
 
@@ -56,7 +60,10 @@ git clone https://github.com/juliensimon/sagemaker-inference-container-graviton
 cd sagemaker-inference-container-graviton
 
 # Build for ARM64 (Graviton)
-docker build --platform linux/arm64 -t sagemaker-inference-container-graviton .
+docker build --platform linux/arm64 -t sagemaker-inference-container-graviton:arm64 .
+
+# Build for AMD64 (x86_64)
+docker build --platform linux/amd64 -t sagemaker-inference-container-graviton:amd64 .
 ```
 
 ### 2. Push to ECR
@@ -78,12 +85,16 @@ aws ecr create-repository \
 aws ecr get-login-password --region $AWS_REGION | \
     docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
-# Tag image
-docker tag sagemaker-inference-container-graviton:latest \
-    $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+# Tag images
+docker tag sagemaker-inference-container-graviton:arm64 \
+    $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:arm64
 
-# Push image
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+docker tag sagemaker-inference-container-graviton:amd64 \
+    $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:amd64
+
+# Push images
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:arm64
+docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:amd64
 ```
 
 ## Deploy to SageMaker

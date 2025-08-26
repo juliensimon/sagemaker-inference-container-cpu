@@ -277,3 +277,4 @@ model.tar.gz
 tmp/
 temp/
 local_models/
+test_env/

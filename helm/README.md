@@ -4,7 +4,7 @@ This Helm chart deploys the SageMaker inference container for Hugging Face model
 
 ## Prerequisites
 
-- Kubernetes cluster with ARM64 nodes (Graviton instances)
+- Kubernetes cluster with AMD64/ARM64 nodes (assuming ARM64 in the rest of the doc)
 - Helm 3.x
 - kubectl configured to access your cluster
 - Docker (for local image building)
