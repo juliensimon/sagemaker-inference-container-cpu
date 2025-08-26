@@ -49,7 +49,7 @@ SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 80
 
 ### Prerequisites
 
-- Docker with AMD64 or AMR64 support
+- Docker with AMD64 or ARM64 support
 - Log in to the Docker Hub
 - Log in to the Hugging Face Hub
 - ECR repository created
