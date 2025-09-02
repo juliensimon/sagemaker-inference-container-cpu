@@ -15,8 +15,6 @@
 > - For local Docker and Docker Compose usage, see the [Intel doc](docs/amd64-setup.md) and the [Arm doc](docs/arm64-setup.md).
 > - For Kubernetes/Helm, see [helm/README.md](helm/README.md)
 
-**That's it!** The container automatically downloads, converts, and optimizes the model for your CPU architecture.
-
 ## Why?
 
 Because small language models and modern CPUs are a great match for cost-efficient AI inference. More context in these blog posts: ["The case for small language model inference on Arm CPUs"](https://www.arcee.ai/blog/the-case-for-small-language-model-inference-on-arm-cpus) and ["Is running language models on CPU really viable?"](https://www.arcee.ai/blog/is-running-language-models-on-cpu-really-viable).
