@@ -38,17 +38,19 @@ def _parse_s3_uri(s3_uri: str) -> Tuple[str, str]:
     return bucket, prefix
 
 
-def download_s3(s3_uri: str, dest_dir: Path) -> None:
+def download_s3(s3_uri: str, dest_dir: Path, filename: str = None) -> None:
     """
     Download files from an S3 URI to a local directory.
 
     This function handles both single file downloads and directory structures.
     For single files, it downloads directly to the destination directory.
     For directories, it preserves the directory structure.
+    When filename is provided, only that specific file is downloaded.
 
     Args:
         s3_uri: S3 URI pointing to the model files (e.g., s3://bucket/model/)
         dest_dir: Local directory to download files to
+        filename: Optional specific filename to download from the S3 URI
 
     Raises:
         ValueError: If S3 URI is invalid or no files are found
@@ -59,6 +61,19 @@ def download_s3(s3_uri: str, dest_dir: Path) -> None:
     bucket, prefix = _parse_s3_uri(s3_uri)
 
     print(f"Downloading model from S3: {s3_uri}")
+
+    # If filename is specified, download only that specific file
+    if filename:
+        # Construct the full S3 key for the specific file
+        file_key = f"{prefix.rstrip('/')}/{filename}" if prefix else filename
+        target = dest_dir / filename
+        print(f"Downloading specific file: {file_key} to {target}")
+        try:
+            s3.download_file(bucket, file_key, str(target))
+            print(f"Successfully downloaded: {target}")
+            return
+        except Exception as e:
+            raise ValueError(f"Failed to download {file_key}: {str(e)}")
 
     # Check if this is a single file or directory
     paginator = s3.get_paginator("list_objects_v2")

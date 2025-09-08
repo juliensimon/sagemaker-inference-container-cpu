@@ -212,7 +212,7 @@ def prepare_model_and_get_path() -> str:
                     "WARNING: Could not detect model type from S3 URI. Assuming safetensors format."
                 )
 
-            download_s3(s3_uri=hf_model_uri, dest_dir=tmp_root)
+            download_s3(s3_uri=hf_model_uri, dest_dir=tmp_root, filename=gguf_file)
         else:
             raise RuntimeError("Either HF_MODEL_ID or HF_MODEL_URI must be provided")
 
