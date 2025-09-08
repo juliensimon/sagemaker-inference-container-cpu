@@ -56,7 +56,6 @@ def download_hf(
                 filename=filename,
                 local_dir=str(dest_dir),
                 token=token,
-                resume_download=True,
             )
             print(
                 f"✅ Successfully downloaded {filename} from {repo_id} to {file_path}"
@@ -67,8 +66,6 @@ def download_hf(
                 repo_id=repo_id,
                 local_dir=str(dest_dir),
                 token=token,
-                local_dir_use_symlinks=False,  # Disable symlinks for Docker compatibility
-                resume_download=True,  # Resume interrupted downloads
             )
             print(f"✅ Successfully downloaded {repo_id} to {dest_dir}")
 

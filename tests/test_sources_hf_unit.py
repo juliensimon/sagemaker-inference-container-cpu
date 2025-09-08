@@ -34,8 +34,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=None,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
@@ -59,8 +57,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=token,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
@@ -85,8 +81,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=token,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
@@ -113,8 +107,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=token,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
@@ -142,8 +134,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=explicit_token,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
@@ -173,8 +163,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=hf_token,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
@@ -197,8 +185,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=None,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
@@ -261,8 +247,6 @@ class TestDownloadHf:
             repo_id=repo_id,
             local_dir=str(dest_dir),
             token=None,
-            local_dir_use_symlinks=False,
-            resume_download=True,
         )
 
         # Function returns None
