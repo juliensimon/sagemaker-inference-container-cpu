@@ -119,6 +119,23 @@ docker build --platform linux/arm64 -t sagemaker-inference-container-graviton:ar
 docker build --platform linux/amd64 -t sagemaker-inference-container-graviton:amd64 .
 ```
 
+**Or use the provided build scripts:**
+```bash
+# Build for ARM64 (Graviton)
+./scripts/build-arm64.sh
+
+# Build for AMD64 (x86_64)
+./scripts/build-amd64.sh
+
+# Force rebuild (no cache)
+./scripts/build-arm64.sh --force-rebuild
+./scripts/build-amd64.sh --force-rebuild
+
+# Show help
+./scripts/build-arm64.sh --help
+./scripts/build-amd64.sh --help
+```
+
 ### 2. Push to ECR
 
 ```bash
