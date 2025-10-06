@@ -30,7 +30,7 @@ docker run -d -p 8080:8080 \
   -e HF_MODEL_ID="arcee-ai/arcee-lite" \
   -e QUANTIZATION="Q4_K_M" \
   --name llm-test \
-  afm-inference:arm64
+  sagemaker-inference-container-cpu:arm64
 ```
 
 ### 3. Run with a Private or Gated Model
@@ -50,7 +50,7 @@ docker run -d -p 8080:8080 \
   -e HF_TOKEN="your_hf_token_here" \
   -e QUANTIZATION="Q4_K_M" \
   --name llm-test \
-  afm-inference:arm64
+  sagemaker-inference-container-cpu:arm64
 ```
 
 #### Subsequent Runs (Use Existing Quantized Model)
@@ -61,7 +61,7 @@ docker run -d -p 8080:8080 \
   -v $(pwd)/local_models:/opt/models \
   -e MODEL_FILENAME="model-f16.Q4_K_M.gguf" \
   --name llm-test \
-  afm-inference:arm64
+  sagemaker-inference-container-cpu:arm64
 ```
 
 ### 4. Run with Docker Compose (Alternative)
@@ -186,7 +186,7 @@ docker run -d -p 8080:8080 \
   -e HF_MODEL_ID="TheBloke/Llama-2-7B-Chat-GGUF" \
   -e MODEL_FILENAME="llama-2-7b-chat.q4_k_m.gguf" \
   --name llm-test \
-  afm-inference:arm64
+  sagemaker-inference-container-cpu:arm64
 ```
 
 ### Custom llama.cpp Arguments
@@ -198,7 +198,7 @@ docker run -d -p 8080:8080 \
   -e QUANTIZATION="Q4_K_M" \
   -e LLAMA_CPP_ARGS="--ctx-size 4096 --threads 8" \
   --name llm-test \
-  afm-inference:arm64
+  sagemaker-inference-container-cpu:arm64
 ```
 
 ## Finding Your MODEL_FILENAME

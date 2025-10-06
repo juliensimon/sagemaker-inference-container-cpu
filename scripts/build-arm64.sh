@@ -54,8 +54,8 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_ARGS=(
     --platform linux/arm64
     --file docker/arm64/Dockerfile
-    --tag afm-inference:arm64
-    --tag afm-inference:latest
+    --tag sagemaker-inference-container-cpu:arm64
+    --tag sagemaker-inference-container-cpu:latest
 )
 
 # Add --no-cache flag if force rebuild is enabled
@@ -67,10 +67,10 @@ docker build "${BUILD_ARGS[@]}" "$PROJECT_ROOT"
 
 echo -e "${GREEN}ARM64 build completed successfully!${NC}"
 echo -e "${YELLOW}Available tags:${NC}"
-echo "  - afm-inference:arm64"
-echo "  - afm-inference:latest"
+echo "  - sagemaker-inference-container-cpu:arm64"
+echo "  - sagemaker-inference-container-cpu:latest"
 
 # Optional: Push to registry (uncomment and modify as needed)
 # echo -e "${YELLOW}To push to a registry, uncomment the push command in the script${NC}"
-# docker tag afm-inference:arm64 your-registry/afm-inference:arm64
-# docker push your-registry/afm-inference:arm64
+# docker tag sagemaker-inference-container-cpu:arm64 your-registry/sagemaker-inference-container-cpu:arm64
+# docker push your-registry/sagemaker-inference-container-cpu:arm64

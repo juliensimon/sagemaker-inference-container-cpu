@@ -55,10 +55,10 @@ SageMaker Endpoint → FastAPI Adapter (port 8080) → llama.cpp Server (port 80
 
 ```bash
 # For Intel/AMD64 systems
-docker pull juliensimon/sagemaker-inference-llamacpp-cpu:amd64
+docker pull juliensimon/sagemaker-inference-container-cpu:amd64
 
 # For ARM64/Graviton systems
-docker pull juliensimon/sagemaker-inference-llamacpp-cpu:arm64
+docker pull juliensimon/sagemaker-inference-container-cpu:arm64
 ```
 
 ### 2. Run with a Public Model
@@ -71,7 +71,7 @@ docker run -p 8080:8080 \
   -e QUANTIZATION="Q4_K_M" \
   -v $(pwd)/local_models:/opt/models \
   --name llm-inference \
-  juliensimon/sagemaker-inference-llamacpp-cpu:arm64
+  juliensimon/sagemaker-inference-container-cpu:arm64
 ```
 
 ### 3. Test the API
@@ -101,8 +101,8 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 **Pre-built images are available on Docker Hub:**
 ```bash
 # Pull pre-built images
-docker pull juliensimon/sagemaker-inference-llamacpp-cpu:amd64
-docker pull juliensimon/sagemaker-inference-llamacpp-cpu:arm64
+docker pull juliensimon/sagemaker-inference-container-cpu:amd64
+docker pull juliensimon/sagemaker-inference-container-cpu:arm64
 ```
 
 **Or build from source:**
@@ -113,10 +113,10 @@ git clone https://github.com/juliensimon/sagemaker-inference-container-graviton
 cd sagemaker-inference-container-graviton
 
 # Build for ARM64 (Graviton)
-docker build --platform linux/arm64 -t sagemaker-inference-container-graviton:arm64 .
+docker build --platform linux/arm64 -t sagemaker-inference-container-cpu:arm64 .
 
 # Build for AMD64 (x86_64)
-docker build --platform linux/amd64 -t sagemaker-inference-container-graviton:amd64 .
+docker build --platform linux/amd64 -t sagemaker-inference-container-cpu:amd64 .
 ```
 
 **Or use the provided build scripts:**
@@ -142,7 +142,7 @@ docker build --platform linux/amd64 -t sagemaker-inference-container-graviton:am
 # Set variables
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 AWS_REGION=$(aws configure get region)
-ECR_REPOSITORY="sagemaker-inference-container-graviton"
+ECR_REPOSITORY="sagemaker-inference-container-cpu"
 
 # Create ECR repository (if it doesn't exist)
 aws ecr create-repository \
@@ -156,10 +156,10 @@ aws ecr get-login-password --region $AWS_REGION | \
     docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 # Tag images
-docker tag sagemaker-inference-container-graviton:arm64 \
+docker tag sagemaker-inference-container-cpu:arm64 \
     $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:arm64
 
-docker tag sagemaker-inference-container-graviton:amd64 \
+docker tag sagemaker-inference-container-cpu:amd64 \
     $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:amd64
 
 # Push images

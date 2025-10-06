@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Default values
 DOCKER_USERNAME="juliensimon"
-IMAGE_NAME="sagemaker-inference-llamacpp-cpu"
+IMAGE_NAME="sagemaker-inference-container-cpu"
 VERSION=""
 PUSH_LATEST=false
 PUSH_MULTIARCH=false
@@ -52,7 +52,7 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  -u, --username USERNAME    Docker Hub username (default: juliensimon)"
-            echo "  -i, --image-name NAME      Image name (default: sagemaker-inference-llamacpp-cpu)"
+            echo "  -i, --image-name NAME      Image name (default: sagemaker-inference-container-cpu)"
             echo "  -v, --version VERSION      Version tag to push (e.g., 1.0.0)"
             echo "  --latest                   Also push as 'latest' tag"
             echo "  --multiarch                Push multi-architecture manifest"
@@ -173,8 +173,8 @@ if [ "$PUSH_MULTIARCH" = true ]; then
     echo -e "${BLUE}Multi-architecture push mode${NC}"
 
     # Check if both architecture images exist
-    local_amd64_tag="afm-inference:amd64"
-    local_arm64_tag="afm-inference:arm64"
+    local_amd64_tag="sagemaker-inference-container-cpu:amd64"
+    local_arm64_tag="sagemaker-inference-container-cpu:arm64"
 
     if ! check_image_exists "$local_amd64_tag"; then
         echo -e "${RED}Error: AMD64 image not found locally: $local_amd64_tag${NC}"
@@ -204,11 +204,11 @@ else
     case $CURRENT_ARCH in
         x86_64)
             ARCH_NAME="amd64"
-            local_tag="afm-inference:amd64"
+            local_tag="sagemaker-inference-container-cpu:amd64"
             ;;
         aarch64|arm64)
             ARCH_NAME="arm64"
-            local_tag="afm-inference:arm64"
+            local_tag="sagemaker-inference-container-cpu:arm64"
             ;;
         *)
             echo -e "${RED}Error: Unsupported architecture: $CURRENT_ARCH${NC}"
